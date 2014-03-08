@@ -1,0 +1,137 @@
+#!/usr/bin/php
+<?
+require("/emsincludes/emsqry.inc");
+$history = array();
+$path = "/";
+$pathes = explode("|","/rc/|/hk1/|/hk2/|/hk3/|/hk4/|/ww/|/ww/zirkpump/|/uba/");
+define("CSI", chr(27).chr(91));
+
+function stty($options) {
+   exec($cmd = "/bin/stty $options", $output, $el);
+   $el AND die("exec($cmd) failed");
+   return implode(" ", $output);
+}
+
+function read($prompt = "") {
+   global $history;
+   $tmp_history = $history;
+   stream_set_blocking(STDIN, 0);
+
+   $reset = CSI.chr(0)."G".CSI."0K";
+   # Get original settings
+   $stty_settings = preg_replace("#.*; ?#s", "", stty("--all"));
+
+   # Set new ones
+   stty("cbreak -echo");
+ 
+   $esc = 0;
+   $hline = -1;
+   $tmp_history[-1]="";
+
+   print($reset.$prompt);
+   while(1) {
+      if (($c = fgetc(STDIN))===FALSE) continue;;
+      $v = ord($c);
+#      print(ord($c)."\n\n");
+#      continue;     
+      switch($v){
+      case 27:
+          $esc=1;
+          continue 2;
+      case 127:
+          if (strlen($tmp_history[$hline])<1) continue 2;
+          $tmp_history[$hline] = substr($tmp_history[$hline],0,-1);
+          print($c);
+          continue 2;
+      case 10:
+        # Return settings
+        stty($stty_settings);
+        print("\n");
+        $res = trim($tmp_history[$hline]);
+        unset($history[-1]);
+        if (!isset($history[0]) || $history[0] != $res) array_unshift($history,$res);
+           
+        return $res;
+      }
+
+      if (($esc==1) && ($v == 91)) {$esc=2; continue;};
+      if ($esc==2) {
+        $esc=0; 
+        $emode =0; 
+        switch($v){
+        case 65:
+          $hline++;
+          if ($hline > count($tmp_history)-2) $hline--;
+          break;
+        case 66:
+          $hline--;
+          if ($hline < -1) $hline++;
+          break;
+        }
+        print($reset.$prompt.$tmp_history[$hline]);
+        continue;
+      }
+
+
+      $tmp_history[$hline] .= $c;
+      print($c);
+   }
+
+}
+
+function printIfCurrent($s,$srch=""){
+  $sa = explode("|",$s);
+  if (isset($sa[1]) &&(mktime() - $sa[1]) <= 2){
+    if (($srch=="") || (strpos(" ".$sa[0],$srch))) print($sa[0]."\n");
+  }
+}
+
+print("EMS-Client V0.1 (c) 2014 by Michael Moosbauer\n");
+print("Connecting to EMS-Bus... ");
+# $vers = doEmsCommand("getversion");
+print("OK!\n");
+# print("You are talking to:\n");
+# foreach($vers as $v){
+#   print($v."\n");
+# }
+
+while (1){
+  $prompt = "ems:".($path=="/"?"/":substr($path,0,-1))."> ";
+  $in = read($prompt);
+  $tok = strtok($in," \n\t");
+  switch($tok){
+  case "exit":
+  case "quit":
+  case "q":
+    break 2;
+  case "req":
+    $tok = strtok(" \n\t");
+    if (!$tok) {
+      $tok=strtok($path,"/ ");
+      if ($tok) foreach (doEmsDataCommand($tok." requestdata",true) as $v)  printIfCurrent($v);
+      break;
+    }
+    $srch=strtok(" \n\t");
+    foreach (doEmsDataCommand($tok." requestdata",true) as $v)  printIfCurrent($v,$srch);
+    break;
+  case "cd":
+    $tok = strtok(" \n\t");
+    if (!$tok) { $path = "/" ; break; };
+    if ($tok == "..") {
+      if ($path == "/") break;
+      $path = substr($path,0,strrpos($path,"/",-2)+1);
+      break;
+    }
+    $base=(substr($tok,0,1)=="/")?"/":$path;    
+    $ndir=(substr($tok,0,1)=="/")?substr($tok,1):$tok;    
+    if (substr($ndir,-1)!="/") $ndir.="/"; 
+    
+    if (in_array($base.$ndir,$pathes)) $path=$base.$ndir;
+    break;
+  default:
+    $cmd = trim(str_replace("/"," ",$path)." ".$in);
+    foreach (doEmsCommand($cmd) as $v) print ($v."\n");
+  }
+}
+close_ems();
+?>

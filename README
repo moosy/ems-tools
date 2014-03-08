@@ -1,0 +1,18 @@
+EMS-Tools
+(c) 2014 by Michael Moosbauer
+
+This is a bunch of tools and includes needed to conveniently implement
+a webinterface for controlling a Buderus EMS heating system interfaced
+with a ems-collector daemon.
+
+For installation, see INSTALL.
+
+This work relies heavily of the ems-collector written by
+Danny Baumann. Thanks to him for his excellent work.
+
+NOTE: This version is NOT designed to be made available in the
+      public internet! PLEASE MAKE SURE THAT ALL FILES ARE
+      ONLY ACCESSIBLE IN YOUR LOCAL NETWORK OR IN A PASSWORD-
+      PROTECTED ENVIRONMENT!
+      Otherwise any bad guy will be able to reconfigure your
+      heating system!!

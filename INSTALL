@@ -1,0 +1,79 @@
+EMS-Tools
+(c) 2014 by Michael Moosbauer
+
+THIS IS FREE SOFTWARE! PLEASE SEE THE TERMS AND CONDITIONS
+OF THE GENERAL PUBLIC LICENSE IN THE "COPYING"-FILE!
+
+This is a bunch of tools and includes needed to conveniently implement 
+a webinterface for controlling a Buderus EMS heating system interfaced 
+with a ems-collector daemon.
+
+This work relies heavily on the ems-collector software written by 
+Danny Baumann. Thanks to him for his excellent work.
+
+NOTE: This version is NOT designed to be made available in the 
+      public internet! PLEASE MAKE SURE THAT ALL FILES ARE
+      ONLY ACCESSIBLE IN YOUR LOCAL NETWORK OR IN A PASSWORD-
+      PROTECTED ENVIRONMENT! 
+      Otherwise any bad guy will be able to reconfigure your
+      heating system!!
+
+Installation is not straightforward, as you need an PHP enabled
+local webserver. Some experience with PHP-based websites is 
+highly recommended.
+
+You need:
+
+1. A working recent ems-collector daemon. It is assumed that
+   its control port is 7777 and its data port is 7778.
+   This is accomplished by the following startup options
+   (see /etc/default/ems-collector):
+
+    -C 7777 -D 7778 
+
+   You can cat the latest source of the modified ems-collector at
+   https://github.com/moosy/ems-collector.
+   NOTE: You need the master branch!
+   Get it with:
+
+   git clone https://github.com/moosy/ems-collector
+
+
+2. A working PHP environment with access to your EMS-mysql-database.
+   Note:
+   Make sure, that the following PHP-modules are available:
+      posix
+      pcntl
+      shmop
+   Install them with your OS package manager, if needed.
+
+3. IMPORTANT: Set a symlink from /emsincludes/ to the includes-Subdir
+   of this distribution, e.g. by 
+     ln -s /path/to/ems-tools/includes /emsincludes/
+
+4. Adjust ALL config.* files in the includes-dir to suit your needs.
+
+5. Now start the ems-cached.php file as a service. You can adapt the 
+   included init script example (based on an openSuSE system) for your
+   needs.
+
+6. Start the emsclient in the CLI-Subdir. Type 
+     help <enter>.
+   If you see a list of available commands, that's very good.
+   Now try 
+     req uba <enter>
+   You should get a list of UBA-specific data. If you see that too,
+   everything is fine.
+
+7. TROUBLESHOOTING: 
+   If it does not work, check:
+   - if the collector runs, and you can telnet to port 7777 and issue
+     commands (e.g. help)
+   - if you can telnet to port 7778 and you receive periodically 
+     clear-text-data
+   - if you succeed until now, the collector works.
+   - now telnet to 7779, and enter getdata <enter>. you should get
+     a list similar to that from port 7778. If this succeeds, the
+     cache-daemon works.
+   - Double check all the config.* files in your /emsincludes/ dir
+     (you set the symlink, didn't you?)

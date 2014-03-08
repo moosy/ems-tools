@@ -1,0 +1,43 @@
+#!/bin/sh
+# Copyright (c) 2014 Michael Moosbauer
+#
+# init.d/emscached
+#
+### BEGIN INIT INFO
+# Provides:       emscached
+# Required-Start: $network $remote_fs $syslog $named
+# Required-Stop:
+# Default-Start:  3 5
+# Default-Stop:
+# Description:    Starts EMS-cache daemon
+### END INIT INFO
+. /etc/rc.status
+PGMDIR="/home/programming/Heizung/ems-tools/cached"
+LOGFILE="/var/log/ems/emscached.log"
+
+case "$1" in
+    start)
+        echo -n "Starting EMS-cache daemon"
+	startproc $PGMDIR/ems-cached.php >> $LOGFILE 2>&1
+	rc_status -v
+	;;
+    stop)
+
+        echo -n "Stopping EMS-cache daemon"
+	killproc $PGMDIR/ems-cached.php
+	rc_status -v
+	;;
+    status)
+
+        echo -n "EMS-cache daemon is"
+	checkproc $PGMDIR/ems-cached.php
+	rc_status -v
+	;;
+    reload|restart)
+        $0 stop && sleep 3 && $0 start
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|reload|restart}"
+	exit 1
+esac
+
