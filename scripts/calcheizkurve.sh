@@ -37,7 +37,7 @@ fwrite($f1,"$GAP 45\n");
 fclose($f1);
 
 
-if (getHKInfo("redmode")=="offmode") unlink($tmpdie."/hkn.dat");
+if (getHKInfo("redmode")=="offmode") unlink($tmpdir."/hkn.dat");
 
 $f1 = fopen($tmpdir."/temp.dat","w");
 fwrite($f1,"$AT\n$RTO\n$TT\n$TN\n$MAUT\n");
