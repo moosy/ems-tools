@@ -32,12 +32,17 @@ You need:
     -C 7777 -D 7778 
 
    You can cat the latest source of the modified ems-collector at
-   https://github.com/moosy/ems-collector.
-   NOTE: You need the master branch!
+   https://github.com/maniac103/ems-collector
+
    Get it with:
 
-   git clone https://github.com/moosy/ems-collector
+   git clone https://github.com/maniac103/ems-collector
 
+   Note: Sometimes some brand new features in ems-tools only work
+   because of modifications in ems-collector, that may not have found
+   their way (yet) in the official repo. In this case you will find 
+   the patched version at https://github.com/moosy/ems-collector.
+   This version works with the official version, though.
 
 2. A working PHP environment with access to your EMS-mysql-database.
    Note:
