@@ -76,6 +76,8 @@ function getInfo($src,$command){
                 "kpmin" => 		"heaterpump minmodulation =",
                 "kpmax"  => 		"heaterpump maxmodulation =",
                 "kpnachl"  => 		"heaterpump followupminutes =",
+                "burnmin" => 		"burner minmodulation =",
+                "burnmax"  => 		"burner maxmodulation =",
                 "hystein"  => 		"heater onhysteresis =",
                 "hystaus"  => 		"heater offhysteresis =",
                 "totalhours"  => 	"operatingminutes =",

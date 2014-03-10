@@ -55,6 +55,7 @@ $sets = array("nachtred" => "hk1 reducedmodethreshold",
               "contact2"  => "rc setcontactinfo 2",
               "kpnachl"  => "uba pumpdelay",
               "kpmod"    => "uba pumpmodulation",
+              "burnmod"  => "uba burnermodulation",
               "maint"    => "uba schedulemaintenance",
               "vacation" => "hk1 vacationmode",
               "holiday"  => "hk1 holidaymode",
@@ -78,6 +79,7 @@ foreach ($sets as $k => $v){
       $nv = trim($_POST[$k]);
       switch($k){ // Sonderbehandlungen
         case "kpmod":
+        case "burnmod":
           $nv = str_replace("-"," ",$nv);
           break;      
  
