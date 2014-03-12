@@ -71,7 +71,7 @@ function doEmsCommand($in){
           $out = socket_read($ems_socket, 2048);
           $tout++;
           if (strlen($out)>0) $tout=0;
-          if ($tout > 10000000) {  // Timeout 5s (5ms * 1000)
+          if ($tout > 1000) {  // Timeout 5s (5ms * 1000)
             break;
           }
           $res .=$out;
