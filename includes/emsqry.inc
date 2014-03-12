@@ -43,42 +43,14 @@ function open_ems(){
   return true;
 }
 
-function open_ems_data(){
-  global $ems_data_socket;
-  $address = "127.0.0.1";
-  $service_port_data=7779;
-  
-  if (!isset($ems__data_socket)){
-    $ems_data_socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-
-    if ($ems_data_socket === false) {
-      die ("FATAL: Keine Verbindung zum EMS-Cache!\nGrund: " . socket_strerror(socket_last_error($ems_data_socket)) . "\n");
-    }
-
-    $result = socket_connect($ems_data_socket, $address, $service_port_data);
-    if ($result === false) {
-      die ("FATAL: Keine Verbindung zum EMS-Cache!\nGrund: " . socket_strerror(socket_last_error($ems_data_socket)) . "\n");
-    }
-    socket_set_option($ems_data_socket, SOL_SOCKET, SO_RCVTIMEO, array('sec'=>0, 'usec'=>1000));
-
-  }
-  return true;
-}
-
 function close_ems(){
-  global $ems_socket, $ems_data_socket;
+  global $ems_socket;
   $tmp = "quit\n";
   if (isset($ems_socket)){
     socket_shutdown($ems_socket,1);
     while (socket_read($ems_socket, 1)); # Remove garbage
     socket_close($ems_socket);
   }
-  if (isset($ems_data_socket)){
-    socket_write($ems_data_socket, $tmp, strlen($tmp));
-    socket_shutdown($ems_data_socket,1);  
-    while (socket_read($ems_data_socket, 1)); # Remove garbage
-    socket_close($ems_data_socket);
-  }  
 }
 
 
@@ -96,10 +68,10 @@ function doEmsCommand($in){
     $res = "";
     $tout = 0;
     while (1) {
-          $out = socket_read($ems_socket, 32);
+          $out = socket_read($ems_socket, 2048);
           $tout++;
           if (strlen($out)>0) $tout=0;
-          if ($tout > 1000) {  // Timeout 5s (5ms * 1000)
+          if ($tout > 10000000) {  // Timeout 5s (5ms * 1000)
             break;
           }
           $res .=$out;
@@ -121,7 +93,7 @@ function doEmsCommand($in){
 }
 
 function doEmsDataCommand($in="",$wait=false){
-  global $ems_socket, $ems_data_socket, $reqdone;
+  global $ems_socket, $reqdone;
   if (!isset($reqdone)) $reqdone = array();
   $in = trim($in);
   $checks=array("hk1 requestdata" => "hk1 partyhours",
@@ -131,7 +103,7 @@ function doEmsDataCommand($in="",$wait=false){
 		"ww requestdata" => "ww desinfectionday",
                 "rc requestdata" => "buildingtype",
 		"uba requestdata" => "heaterpump followupminutes");
-  $check = "OK";
+  $check = "";
   $oldest = 0;
   if ($in){
     $oldest = mktime();
@@ -143,42 +115,24 @@ function doEmsDataCommand($in="",$wait=false){
     } 
   }
   $tout2=0;
-  open_ems_data();
   while ($tout2 < 20){
     $tout2++;
-    $tmp = "getdata\n";
-    socket_write($ems_data_socket, $tmp, strlen($tmp));
-    $res = "";
-    $tout = 0;
-    while ($out = socket_read($ems_data_socket, 1024)) {
-      if (strlen($out)==0) $tout++;
-      if ($tout > 20) {
-        break;
-      }
-      $res .=$out;
-      if (strpos(" ".$res,"OK")) { break;}
-    }
-
-    $rp = strpos(" \n".$res,$check);
-    if ($rp){
-      if ($check == "OK") break;
-      $val = substr(" \n".$res,$rp);
-      $ep = strpos($val,"\n");
-      $val = substr($val,0,$rp);
-      $vala = explode("|",$val);
-      $valtime = trim($vala[1]);
-
-      if ($valtime > $oldest){
-        break;
+    $res = doEmsCommand("cache fetch");
+    if (!$check) break;   # No need to wait for anything
+    foreach ($res as $r){
+      if (str_replace($check,"",$r)!=$r){
+        $va = explode("|",$r);
+        $valtime  = trim($va[1]);
+        if ($valtime > $oldest){
+          break 2;
+        }
       }
     }
-
     usleep(100000);
-
   }
-  $resa = explode("\n",$res);
-  if (!trim(end($resa))) array_pop($resa);
-  return $resa;
+  if (end($res)=="OK") array_pop($res);    # remove trailing OK...
+  while (!trim(end($res))) array_pop($res);   # ... and empty lines
+  return $res;
 }
 
 

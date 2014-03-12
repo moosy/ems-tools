@@ -25,13 +25,13 @@ highly recommended.
 You need:
 
 1. A working recent ems-collector daemon. It is assumed that
-   its control port is 7777 and its data port is 7778.
+   its control port is 7777.
    This is accomplished by the following startup options
    (see /etc/default/ems-collector):
 
-    -C 7777 -D 7778 
+    -C 7777 
 
-   You can cat the latest source of the modified ems-collector at
+   You can get the latest source of the ems-collector at
    https://github.com/maniac103/ems-collector
 
    Get it with:
@@ -42,15 +42,8 @@ You need:
    because of modifications in ems-collector, that may not have found
    their way (yet) in the official repo. In this case you will find 
    the patched version at https://github.com/moosy/ems-collector.
-   This version works with the official version, though.
 
 2. A working PHP environment with access to your EMS-mysql-database.
-   Note:
-   Make sure, that the following PHP-modules are available:
-      posix
-      pcntl
-      shmop
-   Install them with your OS package manager, if needed.
 
 3. IMPORTANT: Set a symlink from /emsincludes/ to the includes-Subdir
    of this distribution, e.g. by 
@@ -58,11 +51,7 @@ You need:
 
 4. Adjust ALL config.* files in the includes-dir to suit your needs.
 
-5. Now start the ems-cached.php file as a service. You can adapt the 
-   included init script example (based on an openSuSE system) for your
-   needs.
-
-6. Start the emsclient in the CLI-Subdir. Type 
+5. Start the emsclient in the CLI-Subdir. Type 
      help <enter>.
    If you see a list of available commands, that's very good.
    Now try 
@@ -74,11 +63,9 @@ You need:
    If it does not work, check:
    - if the collector runs, and you can telnet to port 7777 and issue
      commands (e.g. help)
-   - if you can telnet to port 7778 and you receive periodically 
-     clear-text-data
-   - if you succeed until now, the collector works.
-   - now telnet to 7779, and enter getdata <enter>. you should get
-     a list similar to that from port 7778. If this succeeds, the
-     cache-daemon works.
+   - if you succeed until now, the collector runs.
+   - now telnet to 7777, and enter cache fetch <enter>. you should get
+     a list of values from your heating system. If this succeeds,
+     the connection to the EMS bus works correctly.
    - Double check all the config.* files in your /emsincludes/ dir
      (you set the symlink, didn't you?)
