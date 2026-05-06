@@ -447,7 +447,7 @@ function html2sched($post,$ids){
   $schstr = "";
   $ids = strtoupper($ids);
   $id = substr($ids,0,1);
-  if (substr($ids,2,1) == "Z") $id = "Z";
+  if (substr($ids,-1) == "Z") $id = "Z";
   
   $idx = 1;
   for($day=0;$day<=6;$day++){
