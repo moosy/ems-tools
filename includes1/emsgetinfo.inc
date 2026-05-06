@@ -1,5 +1,5 @@
 <?php
-require_once("/emsincludes/emsqry.inc");
+require_once("/emsincludes1/emsqry.inc");
 
 function getWWInfo($src){
   return getInfo($src,"ww requestdata");
@@ -22,21 +22,30 @@ function getUBAInfo($src){
 }
 
 function getMaintenanceInfo($src){
-  return getInfo($src,"uba requestdata");
+  return getInfo($src,"uba checkmaintenanceneeded");
 }
 
 function getCurrentMaintenanceInfo($src){
-  return getInfoCommand($src,"uba checkmaintenanceneeded");
+  return getInfo($src,"uba checkmaintenanceneeded");
 }
 
-function getInfo($src,$command){
+function getInfo($src,$command="auto"){
   global $cache;
   if (!isset($cache)) $cache=array();
+  clearstatcache(true);
+  $curdev = trim(file("/emsincludes/current")[0]);
+
+  if (!isset($cache['dev'])) $cache['dev'] = $curdev;
+  if ($cache['dev'] != $curdev) $cache = array(); // Hauswechsel! Cache leeren!
+
+
   # Warmwasser
   $srch = array("wwmode" => 	"ww opmode =",
                 "zirmode" => 	"zirkpump opmode =",
+                "wwtagbetr" =>	"ww daymode =",
                 "spzir" => 	"zirkpump switchpoints =",
-                "wwtag" => 	"ww settemperature =",
+                "wwtag" => 	"ww comforttemperature =",
+                "wwtemp" => 	"ww currenttemperature =",
                 "wwactive" => 	"ww masterswitch =",
                 "limittemp" => 	"ww maxtemperature =",
                 "loadled" => 	"ww onetimeloadindicator =",
@@ -44,32 +53,46 @@ function getInfo($src,$command){
                 "tdday" => 	"ww desinfectionday =",
                 "tdhour" => 	"ww desinfectionhour =",
                 "tdtemp" => 	"ww desinfectiontemperature =",
+                "reducedtemp" =>"ww reducedtemperature =",
+                "extratemp"   =>"ww extratemperature =",
+                "extra15mins" =>"ww extra15mins =",
+                "extraactive" =>"ww extraactive =",
+
+
   # Heizkreis
                 "day" => 		"hk1 daytemperature =",
                 "night" => 		"hk1 nighttemperature =",
-                "tagbetr" =>		"hk1 daymode =",
-                "autobetr" =>		"hk1 automode =",
-                "frost" => 		"hk1 frostsafetemperature =",
-                "temptemp" => 		"hk1 temperatureoverride =",
+                "manual" => 		"hk1 manualtemperature =",
+                "boosttemp" => 		"hk1 boosttemperature =",
+                "boostactive" =>	"hk1 boostactive =",
+                "boosthours" =>		"hk1 boosthours =",
+                "autobetr" =>		"hk1 opmode =",
+                "hkmode" =>		"hk1 opmode =",
+                "hkstate" =>		"hk1 opstate =",
+                "frost" => 		"hk1 frostprotecttemperature =",
+                "temptemp" => 		"hk1 temporarytemperature =",
                 "nachtred" => 		"hk1 reducedmodethreshold =",
                 "urlaubnachtred" => 	"hk1 vacationreducedmodethreshold =",
                 "absquit"  =>	 	"hk1 cancelreducedmodethreshold =",
                 "urlaubt"  =>	 	"hk1 vacationtemperature =",
-                "summertime" => 	"hk1 summerwinterthreshold =",
+                "summerwinterthreshold" => 	"hk1 summerwinterthreshold =",
+                "summeropmode"         =>  "hk1 summeropmode",
                 "auslegtemp" => 	"hk1 designtemperature =",
                 "minvorlauf" => 	"hk1 mintemperature =",
                 "maxvorlauf" => 	"hk1 maxtemperature =",
-                "redmode" => 		"hk1 controltype =",
+                "redmode" => 		"hk1 reductionmode =",
                 "refinput" => 		"hk1 relevantparameter =",
+                "heatingsystem" =>      "hk1 heatingsystem =",
                 "refinputvac" => 	"hk1 vacationreductionmode =",
                 "maxroomeffect" => 	"hk1 maxroomeffect =",
                 "schedoptimizer" => 	"hk1 scheduleoptimizer =",
-                "frostmode" => 		"hk1 frostsafemode =",
-                "raumoffset" => 	"hk1 roomoffset =",
+                "frostmode" => 		"hk1 frostprotectmode =",
+                "raumoffset" => 	"hk1 roomtemperatureoffset =",
   # RC35
-                "minaussentemp" => 	"outdoor mintemperature =",
-                "gebaeude" => 		"buildingtype =",
-                "daempfung" => 		"damping =",
+                "minaussentemp" => 	"rc mintemperature =",
+                "aussentemp"    =>      "outdoor currenttemperature =",
+                "gebaeude" => 		"rc buildingtype =",
+                "daempfung" => 		"outdoortempdamping =",
   # UBA
                 "antipen" => 		"antipendelminutes =",
                 "heizactive" => 	"heater masterswitch =",
@@ -81,6 +104,7 @@ function getInfo($src,$command){
                 "hystein"  => 		"heater onhysteresis =",
                 "hystaus"  => 		"heater offhysteresis =",
                 "totalhours"  => 	"operatingminutes =",
+                "systemtime"  => 	"systemtime =",
   # Party
                 "pause" => 		"hk1 pausehours =",
                 "party" => 		"hk1 partyhours =",
@@ -89,7 +113,25 @@ function getInfo($src,$command){
                 "mthours" => 		"heater maintenanceintervalin100hours =",
                 "mtdate"  => 		"heater maintenancedate = ",
                 "mtactive"  => 		"heater maintenancedue =",
+                "mtmonths"  => 		"heater maintenanceintervalinmonthsuptime =",
   );
+
+
+  $searchstr = $srch[$src];
+
+  if ($command=="auto"){
+    // No command given, so guess...
+    if (substr($searchstr,0,2) == "ww") $command = "ww requestdata";
+    if (substr($searchstr,0,2) == "zi") $command = "ww requestdata";
+    if (substr($searchstr,0,2) == "hk") $command = "hk1 requestdata";
+    if (substr($searchstr,0,2) == "ou") $command = "rc requestdata";
+    if (substr($searchstr,0,2) == "he") $command = "uba requestdata";
+    if (substr($searchstr,0,2) == "bu") $command = "uba requestdata";
+    if (strpos($searchstr,"maintenance") > 0) $command = "uba checkmaintenanceneeded";
+    
+
+  }
+
 
   if (isset($cache[$command])){
     $res = $cache[$command];
@@ -98,7 +140,8 @@ function getInfo($src,$command){
     $cache[$command]=$res;
   }
 
-  $searchstr = $srch[$src];
+
+# var_dump ($res);
 
   foreach($res as $r){
     $r = utf8_decode($r);

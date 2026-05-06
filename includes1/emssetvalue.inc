@@ -1,5 +1,5 @@
 <?php
-require_once("/emsincludes/emsqry.inc");
+require_once("/emsincludes1/emsgetinfo.inc");
 if (isset($_GET["source"])){
   $key = trim($_GET["source"]);
   $val = trim($_GET["value"]);
@@ -24,35 +24,38 @@ function flipdate($s){
   return $res;
 }
 
-$sets = array("nachtred" => "hk1 reducedmodethreshold",
+$sets = array("settime" => "rc settime",
+	      "nachtred" => "hk1 reducedmodethreshold",
 	      "urlaubnachtred" => "hk1 vacationreducedmodethreshold",
               "frost"    => "hk1 frostprotecttemperature",
-              "summertime"  => "hk1 summerwinterthreshold",
+              "summerwinterthreshold"  => "hk1 summerwinterthreshold",
+              "summeropmode" => "hk1 summeropmode",
               "absquit"  => "hk1 cancelreducedmodethreshold",
               "urlaubt"  => "hk1 vacationtemperature",
-              "minvorlauf" => "hk1 minheatflowtemperature",
-              "maxvorlauf" => "hk1 maxheatflowtemperature",
+              "minvorlauf" => "hk1 mintemperature",
+              "maxvorlauf" => "hk1 maxtemperature",
               "maxroomeffect"    => "hk1 maxroomeffect",
               "schedoptimizer"   => "hk1 scheduleoptimizer",
               "hkmode"    => "hk1 mode",
               "redmode"    => "hk1 reductionmode",
-              "refinput"   => "hk1 relevantparameter",
+              "refinput"   => "hk1 heatingsystem",
+              "heatingsystem"  => "hk1 heatingsystem",
               "refinputvac" => "hk1 vacationreductionmode",
               "frostmode" => "hk1 frostprotectmode",
               "limittemp" => "ww limittemperature",
               "loadled"   => "ww showloadindicator",
-              "spzir"    => "ww zirkpump count",
-              "zirmode"  => "ww zirkpump mode",
+              "spzir"    => "ww zirksperhour",
+              "zirmode"  => "ww zirkmode",
               "wwmode"   => "ww mode",
               "tdstat"   => "ww thermdesinfect mode",
               "tdtemp"   => "ww thermdesinfect temperature",
               "tdday"    => "ww thermdesinfect day",
               "tdhour"    => "ww thermdesinfect hour",
-              "wwload"    => "ww loadonce",
-              "wwstopload"  => "ww cancelload",
+              "wwextra"    => "ww extra",
               "antipen"  => "uba antipendel",
               "contact1"  => "rc setcontactinfo 1",
               "contact2"  => "rc setcontactinfo 2",
+              "contact3"  => "rc setcontactinfo 3",
               "kpnachl"  => "uba pumpdelay",
               "kpmod"    => "uba pumpmodulation",
               "burnmod"  => "uba burnermodulation",
@@ -61,16 +64,26 @@ $sets = array("nachtred" => "hk1 reducedmodethreshold",
               "holiday"  => "hk1 holidaymode",
               "hystein"  => "uba hyst on",
               "hystaus"  => "uba hyst off",
-              "wwtag"    => "ww temperature",
-              "temptemp" => "hk1 temperatureoverride",
-              "temptempoff" => "hk1 temperatureoverride off ",
+              "wwtag"    => "ww comforttemp",
+              "reducedtemp"    => "ww reducedtemp",
+              "extratemp" => "ww extratemp",
+              "extraactive"  => "ww extra",
+              "extra15mins" =>  "ww extra15mins",
+              
+              "temptemp" => "hk1 temporarytemp",
+              "temptempoff" => "hk1 temporarytemp off ",
               "day"      => "hk1 daytemperature",
               "night"    => "hk1 nighttemperature",
               "auslegtemp"  => "hk1 designtemperature",
+              "manual"  => "hk1 manualtemp",
+              "boosttemp"  => "hk1 boosttemp",
+              "boosthours"  => "hk1 boosthours",
+              "boostactive"  => "hk1 activateboost",
+
               "gebaeude" => "rc buildingtype",
               "daempfung" => "rc outdoortempdamping",
-              "minaussentemp" => "rc minoutdoortemperature",
-              "raumoffset"  => "hk1 temperatureoffset",
+              "minaussentemp" => "rc mintemperature",
+              "raumoffset"  => "hk1 roomtemperatureoffset",
               "party"    => "hk1 partymode",
               "pause"    => "hk1 pausemode");
               
@@ -98,6 +111,20 @@ foreach ($sets as $k => $v){
           $nva = explode("-",$nv);
           if ($nva[0]=="bydate") $nva[1] = flipdate($nva[1]);
           $nv = implode (" ",$nva);
+          break;
+        
+        case "heatingsystem":
+          $refinput =  getHKInfo("refinput");
+          $nv = $nv ." ".$refinput;
+          break;
+
+        case "refinput":          
+          $heatingsystem = getHKInfo("heatingsystem");
+          $nv = $heatingsystem . " " . $nv;
+          break;
+          
+        case "settime":
+          $nv = date("Y-m-d H:i:s");
           break;
 
       }

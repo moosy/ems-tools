@@ -1,9 +1,9 @@
 #!/usr/bin/php
 <?
-require("/emsincludes/emsqry.inc");
+require("/emsincludes1/emsqry.inc");
 $history = array();
 $path = "/";
-$pathes = explode("|","/rc/|/hk1/|/hk2/|/hk3/|/hk4/|/ww/|/ww/zirkpump/|/uba/");
+$pathes = explode("|","/rc/|/hk1/|/hk2/|/hk3/|/hk4/|/ww/|/ww/zirkpump/|/uba/|/raw/");
 define("CSI", chr(27).chr(91));
 
 function stty($options) {
@@ -81,7 +81,7 @@ function read($prompt = "") {
 
 function printIfCurrent($s,$srch=""){
   $sa = explode("|",$s);
-  if (isset($sa[1]) &&(mktime() - $sa[1]) <= 2){
+  if (isset($sa[1]) &&(time() - $sa[1]) <= 2){
     if (($srch=="") || (strpos(" ".$sa[0],$srch))) print($sa[0]."\n");
   }
 }

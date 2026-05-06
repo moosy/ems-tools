@@ -1,7 +1,10 @@
 #!/usr/bin/php
 <?php
-$incdir = "/emsincludes/";
-require($incdir."emsgetinfo.inc");
+$incdir = "/emsincludes";
+$dev = "";
+if (($argc > 1 ) && file_exists($incdir.$argv[1])) $dev = trim($argv[1]);
+$incdir .= $dev;
+require($incdir."/emsgetinfo.inc");
 
 $AT = getHKInfo("auslegtemp");
 $RTO = getHKInfo("raumoffset");
@@ -43,6 +46,6 @@ $f1 = fopen($tmpdir."/temp.dat","w");
 fwrite($f1,"$AT\n$RTO\n$TT\n$TN\n$MAUT\n");
 fclose($f1);
 
-exec($emsscriptpath."/ems-heizkurve.py");
+exec($emsscriptpath."/ems-heizkurve.py ".$dev);
 
- 
+exec("killall calcheizkurve.sh"); 
